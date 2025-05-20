@@ -100,13 +100,13 @@ table tr:hover {
 .delete-btn {
   width: 32px;
   height: 32px;
+  border: none;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   text-decoration: none;
-  transition: opacity 0.3s;
 }
 
 .edit-btn {
@@ -129,7 +129,6 @@ table tr:hover {
   font-size: 16px;
 }
 
-/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -219,7 +218,6 @@ table tr:hover {
   background-color: #c0392b;
 }
 
-/* Form Styling */
 .form-container {
   background-color: white;
   border-radius: 8px;

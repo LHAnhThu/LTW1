@@ -33,7 +33,7 @@ class Department(models.Model):
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.TextField()
-    avatar_url = models.URLField(max_length=255, blank=True, null=True)
+    avatar_url = models.ImageField(upload_to='posts/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Comment(models.Model):
@@ -131,7 +131,7 @@ class Notification(models.Model):
     is_global = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # save first to have ID
+        super().save(*args, **kwargs)
         if self.is_global:
             self.departments.clear()
 

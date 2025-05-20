@@ -404,17 +404,9 @@ def admin_notification_delete(request, notification_id):
 
 @login_required
 def notification_view(request):
-    # Lấy thông báo cá nhân
-    personal_notifications = Notification.objects.filter(
-        usernotification__user=request.user,
-        type='personal'
-    ).order_by('-created_at')
+    personal_notifications = Notification.objects.filter(usernotification__user=request.user, type='personal').order_by('-created_at')
 
-
-    user_notifications = UserNotification.objects.filter(
-        user=request.user,
-        notification__in=personal_notifications
-    )
+    user_notifications = UserNotification.objects.filter(user=request.user,notification__in=personal_notifications)
     read_notifications = set(user_notifications.filter(is_read=True).values_list('notification_id', flat=True))
 
     for notification in personal_notifications:
@@ -423,12 +415,9 @@ def notification_view(request):
     personal_unread_count = get_unread_count(request.user, 'personal')
 
     user_departments = request.user.department
-    company_notifications = Notification.objects.filter(
-        type='company'
-    ).filter(
-        Q(is_global=True) |
-        Q(departments=user_departments)
-    ).distinct().order_by('-created_at')
+    company_notifications = (Notification.objects.filter(type='company')
+                             .filter(Q(is_global=True) | Q(departments=user_departments))
+                             .distinct().order_by('-created_at'))
 
     company_unread_count = get_unread_count(request.user, 'company')
 
@@ -443,16 +432,11 @@ def notification_view(request):
 def notification_company(request):
     user_departments = request.user.department
 
-    company_notifications = Notification.objects.filter(
-        type='company'
-    ).filter(
-        Q(is_global=True) |
-        Q(departments=user_departments)
-    ).distinct().order_by('-created_at')
+    company_notifications = (Notification.objects.filter(type='company')
+                             .filter(Q(is_global=True) | Q(departments=user_departments))
+                             .distinct().order_by('-created_at'))
 
-    user_notifications = UserNotification.objects.filter(
-        user=request.user,
-        notification__in=company_notifications
+    user_notifications = UserNotification.objects.filter(user=request.user, notification__in=company_notifications
     )
     read_notifications = set(user_notifications.filter(is_read=True).values_list('notification_id', flat=True))
 
@@ -461,10 +445,7 @@ def notification_company(request):
 
     company_unread_count = get_unread_count(request.user, 'company')
 
-    personal_notifications = Notification.objects.filter(
-        usernotification__user=request.user,
-        type='personal'
-    ).order_by('-created_at')
+    personal_notifications = Notification.objects.filter(usernotification__user=request.user, type='personal').order_by('-created_at')
 
     UserNotification.objects.filter(
         user=request.user,
@@ -567,26 +548,6 @@ def task_view(request):
     })
 
 
-@login_required
-def edit_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id, user=request.user)
-
-    if request.method == 'POST':
-        post.content = request.POST.get('content', '')
-        post.avatar_url = request.POST.get('avatar_url', '')
-        post.save()
-    return redirect('profile', username=request.user.username)
-
-
-@login_required
-def delete_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id, author=request.user)
-
-    if request.method == 'POST':
-        post.delete()
-        return redirect('profile', username=request.user.username)
-
-    return redirect('profile', username=request.user.username)
 
 
 from .forms import TaskAssignmentForm
@@ -702,22 +663,15 @@ def edit_post(request, post_id):
 
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
-        avatar_url = request.POST.get('avatar_url', '').strip()
         new_image = request.FILES.get('new_image')
 
         post.title = title
 
         if new_image:
-            # Xử lý upload ảnh trực tiếp tại đây
-            path = default_storage.save(f'posts/{new_image.name}', ContentFile(new_image.read()))
-            post.avatar_url = default_storage.url(path)
-        else:
-            post.avatar_url = avatar_url or ''
+            post.avatar_url = new_image
 
         post.save()
-
-    return redirect('user_profile', username=request.user.username)
-
+        return redirect('user_profile', username=request.user.username)
 
 
 @login_required

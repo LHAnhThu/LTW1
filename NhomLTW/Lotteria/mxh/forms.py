@@ -27,7 +27,7 @@ class PostForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 4
             }),
-            'avatar_url': forms.URLInput(attrs={
+            'avatar_url': forms.ClearableFileInput(attrs={
                 'placeholder': 'Nhập URL hình ảnh',
                 'class': 'form-control'
             }),
