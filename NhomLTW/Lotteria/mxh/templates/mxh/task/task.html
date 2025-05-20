@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task List</title>
+    <link rel="stylesheet" href="{% static 'mxh/styles/task.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"/>
+  <link rel="stylesheet" href="{% static 'mxh/styles/home.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+{% include 'mxh/includes/Header.html' %}
+
+<div class="main">
+  {% include 'mxh/includes/Sidebar.html' %}
+
+      <div class="content">
+          <div class="container">
+        <!-- Header Buttons -->
+      <div class="header-buttons">
+    <!-- Bên trái: Phân việc + To-do list -->
+    <div class="left-buttons">
+        <button class="btn btn-assign">Phân việc</button>
+        <button class="btn btn-todo" onclick="window.location.href='/task/create_todo';">To-do list</button>
+    </div>
+
+    <!-- Bên phải: Giao công việc -->
+    <div class="right-button">
+        <button class="add-task-button" onclick="window.location.href='/task/create';">
+            Giao công việc
+        </button>
+    </div>
+</div>
+        <!-- Tabs -->
+        <div class="task-tabs">
+            <div class="tab active" onclick="showTab('pending')">
+                <strong>Chưa xong: {{ pending_tasks|length }}</strong>
+            </div>
+            <div class="tab" onclick="showTab('completed')">
+                <strong>Đã xong: {{ completed_tasks|length }}</strong>
+            </div>
+        </div>
+
+        <!-- Pending Tasks -->
+        <div id="pending-tasks" class="task-list active">
+            {% for task in pending_tasks %}
+            <div class="task-item">
+                <form method="POST" action="{% url 'change_task_status' task.id %}">
+                    {% csrf_token %}
+                    <input type="checkbox" name="status" value="completed" onclick="this.form.submit()" />
+                </form>
+                <div class="task-info">
+                    <img class="avatar" src="{{ task.assigned_by.avatar_url }}" alt="{{ task.assigned_by.username }}">
+                    <div class="task-details">
+                        <div class="task-name"><strong>{{ task.task_name }}</strong></div>
+                        <div class="desc">{{ task.description }}</div>
+                        <div class="assigned-by">Người giao: {{ task.assigned_by.username }}</div>
+                        <div class="assigned-to">
+                           Người nhận:
+                            {% for user in task.assigned_to %}
+                                {{ user.username }}
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+                <div class="task-date">{{ task.deadline|date:"d/m" }}</div>
+            </div>
+            {% empty %}
+            <p>Không có công việc nào.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Completed Tasks -->
+        <div id="completed-tasks" class="task-list" style="display: none;">
+            {% for task in completed_tasks %}
+            <div class="task-item completed">
+                <input type="checkbox" checked disabled />
+                <div class="task-info">
+                    <img class="avatar" src="{{ task.assigned_by.avatar_url }}" alt="{{ task.assigned_by.username }}">
+                    <div class="task-details">
+                        <div class="task-name"><s><strong>{{ task.task_name }}</strong></s></div>
+                        <div class="desc"><s>{{ task.description }}</s></div>
+                        <div class="assigned-by">
+                            Giao bởi: <s>{{ task.assigned_by.username }}</s>
+                        </div>
+                        <div class="assigned-to">
+                            Người nhận:
+                            {% for user in task.assigned_to %}
+                                <s>{{ user.username }}</s>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+                <div class="task-date">{{ task.deadline|date:"d/m" }}</div>
+            </div>
+            {% empty %}
+            <p>Không có công việc đã hoàn thành.</p>
+            {% endfor %}
+        </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function showTab(tab) {
+        const pending = document.getElementById('pending-tasks');
+        const completed = document.getElementById('completed-tasks');
+        const tabs = document.querySelectorAll('.task-tabs .tab');
+
+        tabs.forEach(t => t.classList.remove('active'));
+        if (tab === 'pending') {
+            pending.style.display = 'block';
+            completed.style.display = 'none';
+            tabs[0].classList.add('active');
+        } else {
+            pending.style.display = 'none';
+            completed.style.display = 'block';
+            tabs[1].classList.add('active');
+        }
+    }
+</script>
+
+</body>
+</html>
