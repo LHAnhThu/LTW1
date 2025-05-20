@@ -189,6 +189,7 @@
                             <img src="{% if profile_user.avatar_url %}{{ profile_user.avatar_url }}{% endif %}"
                                 class="avatar-small">
                             <span>{{ profile_user.username }}</span>
+                            <input type="hidden" name="remove_image" id="remove-image-input" value="false">
                         </div>
                         <textarea name="title" class="post-textarea">{{ post.title}}</textarea>
                         <input type="hidden" name="avatar_url" id="edit-post-image" value="">

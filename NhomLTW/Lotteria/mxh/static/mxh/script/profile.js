@@ -85,30 +85,42 @@ document.addEventListener("DOMContentLoaded", () => {
     imagePreview.classList.add("hidden");
   });
 
-  if (removeImageButton) {
-    removeImageButton.addEventListener("click", () => {
-      imageElement.src = "";
-      imagePreview.classList.add("hidden");
-      avatarUrlInput.value = "";
-    });
-  }
+ if (removeImageButton) {
+  removeImageButton.addEventListener("click", () => {
+    imageElement.src = "";
+    imagePreview.classList.add("hidden");
+    avatarUrlInput.value = "";
+
+    const removeImageInput = document.getElementById("remove-image-input");
+    if (removeImageInput) {
+      removeImageInput.value = "true";
+    }
+  });
+}
+
 
   addImageButton.addEventListener("click", () => {
     newImageInput.click();
   });
 
-  newImageInput.addEventListener("change", () => {
-    const file = newImageInput.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        imageElement.src = e.target.result;
-        imagePreview.classList.remove("hidden");
-        avatarUrlInput.value = "";
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+ newImageInput.addEventListener("change", () => {
+  const file = newImageInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      imageElement.src = e.target.result;
+      imagePreview.classList.remove("hidden");
+      avatarUrlInput.value = "";
+
+      const removeImageInput = document.getElementById("remove-image-input");
+      if (removeImageInput) {
+        removeImageInput.value = "false";
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
 
   // Delete post modal
   const deleteLinks = document.querySelectorAll(".delete-post");

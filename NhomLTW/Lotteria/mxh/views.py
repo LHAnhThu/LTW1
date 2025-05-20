@@ -664,14 +664,20 @@ def edit_post(request, post_id):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         new_image = request.FILES.get('new_image')
+        remove_image = request.POST.get('remove_image')
 
         post.title = title
 
-        if new_image:
+        if remove_image == 'true':
+            post.avatar_url.delete(save=False)
+            post.avatar_url = None
+        elif new_image:
             post.avatar_url = new_image
 
         post.save()
         return redirect('user_profile', username=request.user.username)
+
+
 
 
 @login_required
