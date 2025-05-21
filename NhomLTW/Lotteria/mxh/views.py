@@ -3,7 +3,7 @@ import uuid
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -95,6 +95,15 @@ def add_comment(request, post_id):
         content = request.POST.get('content')
         post = get_object_or_404(Post, id=post_id)
         Comment.objects.create(post=post, user=request.user, content=content)
+        if post.user != request.user:
+            notif = Notification.objects.create(
+                sender=request.user,
+                title='Bình luận mới',
+                content=f'{request.user.username} đã bình luận bài viết của bạn: "{content}"',
+                type='personal',
+                post = post
+            )
+            UserNotification.objects.create(notification=notif, user=post.user)
     return redirect('user_home')
 
 # Danh sách bình luận
@@ -141,18 +150,32 @@ def search_employees(request):
 def toggle_like(request):
     if request.method == "POST":
         post_id = request.POST.get('post_id')
-        post = Post.objects.get(id=post_id)
-        user = request.user
+        if not post_id:
+            return HttpResponseBadRequest("Missing post_id")
 
-        liked, created = Like.objects.get_or_create(post=post, user=user)
+        post = get_object_or_404(Post, id=post_id)
+        user = request.user
+        liked_obj, created = Like.objects.get_or_create(post=post, user=user)
         if not created:
-            liked.delete()
+            liked_obj.delete()
             liked_status = False
         else:
             liked_status = True
 
+        if post.user != request.user:
+            notif = Notification.objects.create(
+                sender=request.user,
+                title='Thích bài viết',
+                content=f'{request.user.username} đã thích bài viết của bạn.',
+                type='personal',
+                post=post
+            )
+            UserNotification.objects.create(notification=notif, user=post.user)
+
         like_count = Like.objects.filter(post=post).count()
         return JsonResponse({'liked': liked_status, 'like_count': like_count})
+
+    return HttpResponseBadRequest("Invalid request method")
 
 @login_required
 def start_chat(request, user_id):
@@ -287,6 +310,7 @@ def admin_notifications(request):
     })
 
 # Tạo thông báo admin
+
 @login_required
 @user_passes_test(is_admin)
 def admin_notification_create(request):
@@ -302,8 +326,9 @@ def admin_notification_create(request):
             notification.is_global = (recipient_type == 'all')
             notification.code = f"TB-{str(uuid.uuid4())[:6].upper()}"
 
-            if request.FILES.get('image'):
-                notification.image = request.FILES.get('image')
+            uploaded_image = request.FILES.get('image')
+            if uploaded_image:
+                notification.image = uploaded_image
 
             notification.save()
 
@@ -330,7 +355,6 @@ def admin_notification_create(request):
     })
 
 
-# Sửa thông báo admin
 @login_required
 @user_passes_test(is_admin)
 def admin_notification_edit(request, notification_id):
@@ -341,53 +365,70 @@ def admin_notification_edit(request, notification_id):
         form = NotificationForm(request.POST, request.FILES, instance=notification)
 
         if form.is_valid():
-            notification = form.save(commit=False)
-            recipient_type = form.cleaned_data['recipient_type']
-            notification.is_global = (recipient_type == 'all')
+            # Gọi save(commit=False) để cập nhật dữ liệu không bao gồm quan hệ nhiều-nhiều
+            updated_notification = form.save(commit=False)
 
-            # Xử lý ảnh
-            if 'remove_image' in request.POST and notification.image:
-                notification.image.delete(save=False)
-                notification.image = None
-            elif request.FILES.get('image'):
+            # Xác định kiểu gửi
+            recipient_type = form.cleaned_data.get('recipient_type')
+            updated_notification.is_global = (recipient_type == 'all')
+
+            # Nếu người dùng chọn xóa ảnh
+            if request.POST.get('remove_image'):
                 if notification.image:
                     notification.image.delete(save=False)
-                notification.image = request.FILES.get('image')
+                updated_notification.image = None  # cập nhật None
 
-            notification.save()
+            # Chỉ gán ảnh mới nếu người dùng thực sự upload ảnh mới
+            elif 'image' in request.FILES:
+                # Không cần xóa ảnh cũ thủ công
+                updated_notification.image = request.FILES['image']
 
-            departments_selected = form.cleaned_data['departments']
-            if not notification.is_global:
-                notification.departments.set(departments_selected)
+            # Lưu object
+            updated_notification.save()
+
+            # Cập nhật departments
+            if updated_notification.is_global:
+                updated_notification.departments.clear()
             else:
-                notification.departments.clear()
+                updated_notification.departments.set(form.cleaned_data['departments'])
 
-            # Xóa các user notification cũ
+            # Cập nhật người nhận thông báo
             UserNotification.objects.filter(notification=notification).delete()
 
-            users = User.objects.all() if notification.is_global else User.objects.filter(department__in=departments_selected)
+            if updated_notification.is_global:
+                recipients = User.objects.filter(is_staff=False, is_superuser=False)
+            else:
+                recipients = User.objects.filter(
+                    department__in=updated_notification.departments.all(),
+                    is_staff=False,
+                    is_superuser=False
+                )
 
             UserNotification.objects.bulk_create([
-                UserNotification(notification=notification, user=user, is_read=False)
-                for user in users
+                UserNotification(notification=updated_notification, user=user)
+                for user in recipients
             ])
 
             messages.success(request, 'Cập nhật thông báo thành công!')
             return redirect('admin_notifications')
+
     else:
         initial = {
-            'recipient_type': 'all' if notification.is_global else 'department'
+            'recipient_type': 'all' if notification.is_global else 'department',
         }
         form = NotificationForm(instance=notification, initial=initial)
 
     selected_departments = notification.departments.values_list('id', flat=True)
+
     return render(request, 'mxh/admin/create_edit_notification.html', {
         'form': form,
         'departments': departments,
-        'is_edit': True,
         'notification': notification,
         'selected_departments': selected_departments,
+        'is_edit': True,
     })
+
+
 
 #Xóa thông báo admin
 @login_required
@@ -503,12 +544,35 @@ def profile(request, username):
     profile_user = User.objects.get(username=username)
     user_posts = Post.objects.filter(user=profile_user).order_by('-created_at')
     post_count = user_posts.count()
+    post_id = request.GET.get('post_id')
 
     return render(request, 'mxh/profile/profile.html', {
         'profile_user': profile_user,
         'user_posts': user_posts,
         'post_count': post_count,
+        'post_id': post_id,
     })
+
+
+from django.urls import reverse
+from django.shortcuts import redirect
+
+def redirect_notification(request, notification_id):
+    user_notification = get_object_or_404(
+        UserNotification,
+        notification_id=notification_id,
+        user=request.user
+    )
+
+    user_notification.is_read = True
+    user_notification.save()
+
+    notification = user_notification.notification
+    if notification.post:
+        url = reverse('user_profile', args=[notification.post.user.username])
+        return redirect(f"{url}#post-{notification.post.id}")
+
+    return redirect('notification_view')
 
 
 class TaskForm:

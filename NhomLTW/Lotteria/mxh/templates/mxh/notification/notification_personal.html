@@ -27,22 +27,24 @@
 
       <div id="personal-content">
         {% for notification in personal_notifications %}
-        <div class="profile {% if notification.is_read %}read{% else %}unread{% endif %}">
-          <div class="avatar">
-            {% if notification.sender and notification.sender.avatar_url %}
-            <img src="{{ notification.sender.avatar_url }}" alt="Avatar" class="avatar-img">
-            {% else %}
-            <img src="{% static 'mxh/images/default_avatar.png' %}" alt="Avatar mặc định" class="avatar-img">
-            {% endif %}
+       <a href="{% url 'redirect_notification' notification.id %}" class="notification-link">
+  <div class="profile {% if notification.is_read %}read{% else %}unread{% endif %}">
+    <div class="avatar">
+      {% if notification.sender and notification.sender.avatar_url %}
+      <img src="{{ notification.sender.avatar_url }}" alt="Avatar" class="avatar-img">
+      {% else %}
+      <img src="" alt="Lỗi avatar" class="avatar-img">
+      {% endif %}
+    </div>
 
-          </div>
+    <div class="info">
+      <p class="name">{{ notification.sender.username }}</p>
+      <p>{{ notification.content }}</p>
+    </div>
+    <p class="time">{{ notification.created_at|date:'d/m/Y' }}</p>
+  </div>
+</a>
 
-          <div class="info">
-            <p class="name">{{ notification.sender.username }}</p>
-            <p>{{ notification.content }}</p>
-          </div>
-          <p class="time">{{ notification.created_at|date:'d/m/Y' }}</p>
-        </div>
         {% empty %}
         <p>Không có thông báo cá nhân nào.</p>
         {% endfor %}

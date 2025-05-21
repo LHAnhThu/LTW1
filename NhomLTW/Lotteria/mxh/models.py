@@ -129,11 +129,8 @@ class Notification(models.Model):
     departments = models.ManyToManyField(Department, blank=True)
     code = models.CharField(max_length=20, blank=True, null=True)
     is_global = models.BooleanField(default=False)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.is_global:
-            self.departments.clear()
 
     def read_count(self):
         return self.usernotification_set.filter(

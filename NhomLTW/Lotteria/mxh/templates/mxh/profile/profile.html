@@ -37,7 +37,7 @@
                 <div class="profile-content" id="posts-content">
                     <div class="post-list">
                         {% for post in user_posts  %}
-                        <div class="post">
+                        <div class="post" id="post-{{ post.id }}" >
                             <div class="user">
                                 <img src="{{ post.user.avatar_url|default:'#' }}" alt="Avatar">
                                 <div class="post-author">
@@ -244,7 +244,9 @@
                 }
             });
         }
+
     </script>
+
 </body>
 
 </html>

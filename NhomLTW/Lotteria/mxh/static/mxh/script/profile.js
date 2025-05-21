@@ -51,6 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const newImageInput = document.getElementById("new-image-input");
   const editPostForm = document.getElementById("edit-post-form");
 
+
+
   editPostLinks.forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -151,3 +153,4 @@ document.addEventListener("DOMContentLoaded", () => {
     postIdToDelete = null;
   });
 });
+
