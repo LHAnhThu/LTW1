@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Hiển thị tên file khi chọn ảnh
   const imageInput = document.getElementById('id_image_url') || document.getElementById('image');
   const fileNameDisplay = document.getElementById('file-name');
 
@@ -10,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Hiển thị/ẩn phần chọn bộ phận theo radio recipient_type
   const recipientRadios = document.querySelectorAll('input[name="recipient_type"]');
   const departmentsContainer = document.getElementById('departments-container');
 
@@ -25,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleDepartments();
 });
 
-// Xác nhận xóa thông báo
 function confirmDelete(id, title) {
   const modal = document.getElementById('delete-modal');
   const form = document.getElementById('delete-form');

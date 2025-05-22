@@ -9,7 +9,6 @@
     border-radius: 60px;
     padding: 10px 20px;
     margin-right: 10px;
-    cursor: pointer;
     font-weight: bold;
     position: relative;
     border: 1px solid #000;
@@ -56,27 +55,16 @@
     background-color: #f0f0f0;
 }
 
-.avatar, .profile-pic {
+.avatar {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     margin-right: 10px;
-    flex-shrink: 0;
-    object-fit: cover;
-}
-
-.info {
-    flex-grow: 1;
 }
 
 .name {
     font-size: 18px;
     font-weight: bold;
-}
-
-.message {
-    font-size: 14px;
-    color: #666;
 }
 
 .time {
@@ -91,9 +79,7 @@
     background-color: #0969731A;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     margin: 0 60px;
-    text-align: center;
 }
 
 .company-details h2 {
@@ -121,9 +107,7 @@
 }
 
 .title-date .date {
-    font-size: 0.9rem;
     color: #666;
-    margin: 0;
 }
 
 .notification-link {

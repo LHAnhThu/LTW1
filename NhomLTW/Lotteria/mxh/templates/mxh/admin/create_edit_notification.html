@@ -7,8 +7,8 @@
     <title>{% if is_edit %}Chỉnh sửa{% else %}Tạo{% endif %} thông báo - Lotteria</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{% static 'mxh/styles/home.css' %}">
-    <link rel="stylesheet" href="{% static 'mxh/styles/admin.css' %}">
-    <script src="{% static 'mxh/script/admin.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'mxh/styles/admin_notification_form.css' %}">
+    <script src="{% static 'mxh/script/admin_notification.js' %}"></script>
 </head>
 <body>
     {% include 'mxh/includes/Header_admin.html' %}
@@ -92,15 +92,6 @@
                         <label for="image">Ảnh đính kèm:</label>
                         <div class="file-upload">
                             <input type="file" id="image" name="image" accept="image/*">
-                            <label for="image" class="file-label">
-                                <i class="fas fa-plus"></i>
-                                <span>Chọn tệp</span>
-                            </label>
-                            <div id="file-name" class="file-name">
-                                {% if is_edit and notification.image %}
-                                    {{ notification.image.name|cut:"media/" }}
-                                {% endif %}
-                            </div>
                         </div>
 
                         {% if is_edit and notification.image %}
