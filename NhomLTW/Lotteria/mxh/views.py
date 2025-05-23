@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -305,8 +306,7 @@ def is_admin(user):
 def admin_notifications(request):
     notifications = Notification.objects.filter(type='company').order_by('-created_at')
     return render(request, 'mxh/admin/notification_list.html', {
-        'notifications': notifications,
-        'unread_notifications': get_unread_count(request.user)
+        'notifications': notifications
     })
 
 # Tạo thông báo admin
@@ -324,7 +324,7 @@ def admin_notification_create(request):
             notification.type = 'company'
             recipient_type = form.cleaned_data['recipient_type']
             notification.is_global = (recipient_type == 'all')
-            notification.code = f"TB-{str(uuid.uuid4())[:6].upper()}"
+            notification.code = "TB-" + datetime.now().strftime("%y%m%d%H%M%S")
 
             uploaded_image = request.FILES.get('image')
             if uploaded_image:
@@ -342,8 +342,6 @@ def admin_notification_create(request):
                 UserNotification(notification=notification, user=user, is_read=False)
                 for user in users
             ])
-
-            messages.success(request, 'Tạo thông báo thành công!')
             return redirect('admin_notifications')
     else:
         form = NotificationForm(initial={'recipient_type': 'all'})
@@ -365,34 +363,26 @@ def admin_notification_edit(request, notification_id):
         form = NotificationForm(request.POST, request.FILES, instance=notification)
 
         if form.is_valid():
-            # Gọi save(commit=False) để cập nhật dữ liệu không bao gồm quan hệ nhiều-nhiều
             updated_notification = form.save(commit=False)
 
-            # Xác định kiểu gửi
             recipient_type = form.cleaned_data.get('recipient_type')
             updated_notification.is_global = (recipient_type == 'all')
 
-            # Nếu người dùng chọn xóa ảnh
             if request.POST.get('remove_image'):
                 if notification.image:
                     notification.image.delete(save=False)
-                updated_notification.image = None  # cập nhật None
+                updated_notification.image = None
 
-            # Chỉ gán ảnh mới nếu người dùng thực sự upload ảnh mới
             elif 'image' in request.FILES:
-                # Không cần xóa ảnh cũ thủ công
                 updated_notification.image = request.FILES['image']
 
-            # Lưu object
             updated_notification.save()
 
-            # Cập nhật departments
             if updated_notification.is_global:
                 updated_notification.departments.clear()
             else:
                 updated_notification.departments.set(form.cleaned_data['departments'])
 
-            # Cập nhật người nhận thông báo
             UserNotification.objects.filter(notification=notification).delete()
 
             if updated_notification.is_global:
@@ -408,8 +398,6 @@ def admin_notification_edit(request, notification_id):
                 UserNotification(notification=updated_notification, user=user)
                 for user in recipients
             ])
-
-            messages.success(request, 'Cập nhật thông báo thành công!')
             return redirect('admin_notifications')
 
     else:
@@ -440,7 +428,6 @@ def admin_notification_delete(request, notification_id):
             notification.image.delete(save=False)
         UserNotification.objects.filter(notification=notification).delete()
         notification.delete()
-        messages.success(request, 'Xóa thông báo thành công!')
     return redirect('admin_notifications')
 
 @login_required
@@ -455,17 +442,11 @@ def notification_view(request):
 
     personal_unread_count = get_unread_count(request.user, 'personal')
 
-    user_departments = request.user.department
-    company_notifications = (Notification.objects.filter(type='company')
-                             .filter(Q(is_global=True) | Q(departments=user_departments))
-                             .distinct().order_by('-created_at'))
-
     company_unread_count = get_unread_count(request.user, 'company')
 
     return render(request, 'mxh/notification/notification_personal.html', {
         'personal_notifications': personal_notifications,
         'personal_unread_count': personal_unread_count,
-        'company_notifications': company_notifications,
         'company_unread_count': company_unread_count
     })
 
@@ -475,7 +456,7 @@ def notification_company(request):
 
     company_notifications = (Notification.objects.filter(type='company')
                              .filter(Q(is_global=True) | Q(departments=user_departments))
-                             .distinct().order_by('-created_at'))
+                             .order_by('-created_at'))
 
     user_notifications = UserNotification.objects.filter(user=request.user, notification__in=company_notifications
     )
@@ -486,57 +467,30 @@ def notification_company(request):
 
     company_unread_count = get_unread_count(request.user, 'company')
 
-    personal_notifications = Notification.objects.filter(usernotification__user=request.user, type='personal').order_by('-created_at')
-
-    UserNotification.objects.filter(
-        user=request.user,
-        notification__in=personal_notifications,
-        is_read=False
-    ).update(is_read=True)
-
     personal_unread_count = get_unread_count(request.user, 'personal')
 
     return render(request, 'mxh/notification/notification_company.html', {
         'company_notifications': company_notifications,
         'company_unread_count': company_unread_count,
         'personal_unread_count': personal_unread_count,
-        'personal_notifications': personal_notifications
     })
 
 @login_required
 def notification_company_detail(request, pk):
     notification = get_object_or_404(Notification, pk=pk, type='company')
 
-    user_notification, created = UserNotification.objects.get_or_create(
-        user=request.user,
-        notification=notification
-    )
+    user_notification = UserNotification.objects.get(user=request.user, notification=notification)
     if not user_notification.is_read:
         user_notification.is_read = True
         user_notification.save()
-
-    personal_notifications = Notification.objects.filter(
-        usernotification__user=request.user,
-        type='personal'
-    ).order_by('-created_at')
-
-    company_notifications = Notification.objects.filter(
-        type='company'
-    ).filter(
-        Q(is_global=True) |
-        Q(departments=request.user.department)
-    ).distinct().order_by('-created_at')
 
     personal_unread_count = get_unread_count(request.user, 'personal')
     company_unread_count = get_unread_count(request.user, 'company')
 
     return render(request, 'mxh/notification/company_notification_detail.html', {
         'notification': notification,
-        'personal_notifications': personal_notifications,
-        'company_notifications': company_notifications,
         'personal_unread_count': personal_unread_count,
         'company_unread_count': company_unread_count,
-        'selected_tab': 'company'
     })
 
 @login_required

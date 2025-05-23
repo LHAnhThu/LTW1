@@ -49,10 +49,7 @@
                                     <a href="{% url 'admin_notification_edit' notification.id %}" class="edit-btn" title="Chỉnh sửa">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button"
-                                            class="delete-btn"
-                                            title="Xóa"
-                                            onclick="confirmDelete('{{ notification.id }}', '{{ notification.title }}')">
+                                    <button type="button" class="delete-btn" title="Xóa" onclick="confirmDelete('{{ notification.id }}', '{{ notification.title }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
 
@@ -74,11 +71,11 @@
     <div class="modal-content">
         <h3>Xóa thông báo</h3>
         <p id="delete-message">
-            Bạn có chắc muốn xóa thông báo <strong id="delete-title">...</strong> này không?
+            Bạn có chắc muốn xóa thông báo <strong id="delete-title"></strong> này không?
         </p>
         <div class="modal-actions">
             <button class="btnCancel" onclick="closeModal()">Hủy</button>
-            <form id="delete-form" method="POST" action="">
+            <form id="delete-form" method="POST">
                 {% csrf_token %}
                 <button type="submit" class="confirm-btn">Xóa</button>
             </form>

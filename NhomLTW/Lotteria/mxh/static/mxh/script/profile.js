@@ -1,21 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Hàm toggle tab (gồm active class và ẩn/hiện content)
-  function toggleTabs(activeTab, inactiveTab, activeContent, inactiveContent) {
-    activeTab.classList.add("active");
-    inactiveTab.classList.remove("active");
-    activeContent.classList.remove("hidden");
-    inactiveContent.classList.add("hidden");
-  }
+  setupTabs();
+  setupPostMenu();
+  setupEditPostModal();
+  setupDeleteModal();
+});
 
+function setupTabs() {
   const postsTab = document.getElementById("posts-tab");
   const infoTab = document.getElementById("info-tab");
   const postsContent = document.getElementById("posts-content");
   const infoContent = document.getElementById("info-content");
 
-  postsTab?.addEventListener("click", () => toggleTabs(postsTab, infoTab, postsContent, infoContent));
-  infoTab?.addEventListener("click", () => toggleTabs(infoTab, postsTab, infoContent, postsContent));
+  postsTab.addEventListener("click", () => toggleTabs(postsTab, infoTab, postsContent, infoContent));
+  infoTab.addEventListener("click", () => toggleTabs(infoTab, postsTab, infoContent, postsContent));
+}
 
-  // Xử lý hiển thị menu bài viết + đóng khi click ngoài
+function toggleTabs(activeTab, inactiveTab, activeContent, inactiveContent) {
+  activeTab.classList.add("active");
+  inactiveTab.classList.remove("active");
+  activeContent.classList.remove("hidden");
+  inactiveContent.classList.add("hidden");
+}
+
+function setupPostMenu() {
   document.querySelectorAll(".menu-button").forEach(button => {
     button.addEventListener("click", e => {
       e.stopPropagation();
@@ -25,58 +32,55 @@ document.addEventListener("DOMContentLoaded", () => {
       const closeMenu = event => {
         if (!menu.contains(event.target)) {
           menu.classList.remove("show");
-          document.removeEventListener("click", closeMenu);
         }
       };
-
-      document.addEventListener("click", closeMenu);
     });
   });
+}
 
-  // Modal chỉnh sửa bài viết
+function setupEditPostModal() {
   const modal = document.getElementById("edit-post-modal");
   const editForm = document.getElementById("edit-post-form");
-  const closeModalBtn = modal?.querySelector(".close-button");
-  const imagePreview = modal?.querySelector(".post-image-preview");
-  const imageElement = imagePreview?.querySelector("img");
+  const closeModalBtn = modal.querySelector(".close-button");
+  const imagePreview = modal.querySelector(".post-image-preview");
+  const imageElement = imagePreview.querySelector("img");
   const removeImageInput = document.getElementById("remove-image-input");
   const newImageInput = document.getElementById("new-image-input");
 
-  function resetModalImage() {
-    if (imagePreview) imagePreview.classList.add("hidden");
-    if (imageElement) imageElement.src = "";
-    if (removeImageInput) removeImageInput.value = "false";
-    if (newImageInput) newImageInput.value = "";
-  }
+  setupEditButtons(editForm, modal, imagePreview, imageElement, removeImageInput, newImageInput);
+  setupImageAddButton(newImageInput, imagePreview, imageElement, removeImageInput);
+  setupRemoveImageButton(modal, imagePreview, imageElement, removeImageInput, newImageInput);
+  closeModalBtn.addEventListener("click", () => closeModal(modal));
+}
 
+function setupEditButtons(editForm, modal, imagePreview, imageElement, removeImageInput, newImageInput) {
   document.querySelectorAll(".edit-post").forEach(link => {
     link.addEventListener("click", e => {
       e.preventDefault();
+      const { postId, postTitle, postImage, editUrl } = link.dataset;
 
-      const { postId, postTitle, postImage } = link.dataset;
+      editForm.action = link.dataset.editUrl || "";
 
-      editForm.action = `/edit_post/${postId}`;
       document.getElementById("edit-post-id").value = postId;
       editForm.querySelector("textarea[name='title']").value = postTitle || "";
 
       if (postImage) {
         imagePreview.classList.remove("hidden");
         imageElement.src = postImage;
-        if (removeImageInput) removeImageInput.value = "false";
+        removeImageInput.value = "false";
       } else {
-        resetModalImage();
+        resetModalImage(imagePreview, imageElement, removeImageInput, newImageInput);
       }
 
       modal.classList.add("show");
     });
   });
+}
 
-  closeModalBtn?.addEventListener("click", () => modal.classList.remove("show"));
-
-  // Thêm ảnh mới trong modal
+function setupImageAddButton(newImageInput, imagePreview, imageElement, removeImageInput) {
   document.getElementById("add-image-button")?.addEventListener("click", () => newImageInput.click());
 
-  newImageInput?.addEventListener("change", function () {
+  newImageInput.addEventListener("change", function () {
     const file = this.files[0];
     if (!file) return;
 
@@ -84,18 +88,31 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.onload = e => {
       imagePreview.classList.remove("hidden");
       imageElement.src = e.target.result;
-      if (removeImageInput) removeImageInput.value = "false";
+      removeImageInput.value = "false";
     };
     reader.readAsDataURL(file);
   });
+}
 
-  // Xóa ảnh trong modal
-  modal?.querySelector(".remove-image-button")?.addEventListener("click", () => {
-    resetModalImage();
-    if (removeImageInput) removeImageInput.value = "true";
+function setupRemoveImageButton(modal, imagePreview, imageElement, removeImageInput, newImageInput) {
+  modal.querySelector(".remove-image-button")?.addEventListener("click", () => {
+    resetModalImage(imagePreview, imageElement, removeImageInput, newImageInput);
+    removeImageInput.value = "true";
   });
+}
 
-  // Modal xác nhận xóa bài viết
+function closeModal(modal) {
+  modal.classList.remove("show");
+}
+
+function resetModalImage(imagePreview, imageElement, removeImageInput, newImageInput) {
+  imagePreview.classList.add("hidden");
+  if (imageElement) imageElement.src = "";
+  if (removeImageInput) removeImageInput.value = "false";
+  if (newImageInput) newImageInput.value = "";
+}
+
+function setupDeleteModal() {
   const deleteModal = document.getElementById("confirm-delete-modal");
   let deleteUrl = "";
 
@@ -114,9 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("confirm-delete-yes")?.addEventListener("click", () => {
     if (deleteUrl) window.location.href = deleteUrl;
   });
-});
+}
 
-// Toggle hiển thị ô nhập bình luận
 function toggleComment(btn) {
   const commentBox = btn.closest(".post")?.querySelector(".comment-input");
   if (commentBox) {
@@ -124,7 +140,6 @@ function toggleComment(btn) {
   }
 }
 
-// Toggle hiển thị danh sách bình luận
 function toggleCommentList(btn) {
   const list = btn.closest(".post")?.querySelector(".comments-list");
   if (list) {

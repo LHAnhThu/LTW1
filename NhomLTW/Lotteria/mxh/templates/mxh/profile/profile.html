@@ -58,7 +58,8 @@
                                      data-post-title="{{ post.title|escapejs }}"
                                      {% if post.avatar_url %}
                                         data-post-image="{{ post.avatar_url.url }}"
-                                     {% endif %}>
+                                     {% endif %}
+                                     data-edit-url="{% url 'edit_post' post.id %}" >
                                     <i class="fas fa-edit"></i> Chỉnh sửa bài viết
                                   </a>
                                   <a href="{% url 'delete_post' post.id %}" class="menu-item delete-post" data-delete-url="{% url 'delete_post' post.id %}">
@@ -75,18 +76,25 @@
                                 {% endif %}
                             </div>
                             <div class="post-actions">
-                                <button class="like-btn" onclick="toggleLike(this)" data-post-id="{{ post.id }}">
-                                    <i class="fa-heart {% if post.user_liked %}fas{% else %}far{% endif %}"
+                                 <div class="left-actions">
+                                 <button class="like-btn" onclick="toggleLike(this)" data-post-id="{{ post.id }}">
+                                     <i class="fa-heart {% if post.user_liked %}fas{% else %}far{% endif %}"
                                         style="{% if post.user_liked %}color:red;{% endif %}"></i>
-                                    <div class="like-count">{{ post.like_set.count }}</div>
-                                </button>
+                                     <div class="like-count">{{ post.like_set.count }}</div>
+                                 </button>
+
                                 <button class="comment-btn" onclick="toggleComment(this)">
-                                    <i class="far fa-comment"></i> Bình luận
+                                  <i class="far fa-comment"></i> Bình luận
                                 </button>
-                                <button class="comment-btn right-align" onclick="toggleCommentList(this)">
-                                    <span>{{ post.comments.count }} bình luận</span>
-                                </button>
+                                </div>
+
+                                <div class="right-actions">
+                                    <button class="comment-btn" onclick="toggleCommentList(this)">
+                                      <span>{{ post.comments.count }} bình luận</span>
+                                    </button>
+                                </div>
                             </div>
+
 
                             <div class="comment-input" style="display: none;">
                                 <div class="d-flex align-items-center mb-3">
@@ -169,7 +177,7 @@
         </div>
 
         <div class="modal" id="edit-post-modal">
-            <form method="post" action="" id="edit-post-form" enctype="multipart/form-data">
+            <form method="post" id="edit-post-form" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="post_id" id="edit-post-id" value="">
                 <div class="modal-content">

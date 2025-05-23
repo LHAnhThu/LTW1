@@ -13,6 +13,7 @@
     position: relative;
     border: 1px solid #000;
     color: #545454;
+    text-decoration: none;
 }
 
 .tab.active {

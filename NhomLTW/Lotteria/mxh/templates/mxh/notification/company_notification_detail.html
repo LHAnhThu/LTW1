@@ -17,12 +17,12 @@
 
     <div class="content">
       <div class="tabs">
-        <div class="tab" onclick="location.href='{% url 'notification_view' %}'">
+         <a href="{% url 'notification_view' %}" class="tab">
           Cá nhân <span class="notification">{{ personal_unread_count }}</span>
-        </div>
-        <div class="tab active" onclick="location.href='{% url 'notification_company' %}'">
+        </a>
+        <a href="{% url 'notification_company' %}" class="tab active">
           Công ty <span class="notification">{{ company_unread_count }}</span>
-        </div>
+        </a>
       </div>
 
       <div class="company-details">
