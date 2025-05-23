@@ -523,8 +523,9 @@ def redirect_notification(request, notification_id):
 
     notification = user_notification.notification
     if notification.post:
-        url = reverse('user_profile', args=[notification.post.user.username])
-        return redirect(f"{url}#post-{notification.post.id}")
+        username = notification.post.user.username
+        post_id = notification.post.id
+        return redirect(f"/profile/{username}/#post-{post_id}")
 
     return redirect('notification_view')
 
