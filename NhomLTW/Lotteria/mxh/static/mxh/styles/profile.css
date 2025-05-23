@@ -324,6 +324,20 @@
   gap: 20px;
 }
 
+.edit-avatar-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: #ffffffcc;
+    border-radius: 50%;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.edit-avatar-icon i {
+    font-size: 16px;
+    color: #333;
+}
 
 
 

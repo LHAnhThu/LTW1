@@ -17,7 +17,7 @@ class User(AbstractUser):
         blank=True,
         related_name='users'
     )
-    avatar_url = models.URLField(max_length=255, blank=True, null=True)
+    avatar_url = models.ImageField(null=True, blank=True)
 
 
 class Department(models.Model):
@@ -151,8 +151,6 @@ class UserNotification(models.Model):
     is_read = models.BooleanField(default=False)
     received_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('notification', 'user')
 
 
 

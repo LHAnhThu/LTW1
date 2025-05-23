@@ -529,6 +529,13 @@ def redirect_notification(request, notification_id):
 
     return redirect('notification_view')
 
+@login_required
+def update_avatar(request):
+    if request.method == 'POST' and request.FILES.get('avatar'):
+        user = request.user
+        user.avatar_url = request.FILES['avatar']
+        user.save()
+    return redirect(reverse('user_profile', kwargs={'username': request.user.username}))
 
 class TaskForm:
     pass

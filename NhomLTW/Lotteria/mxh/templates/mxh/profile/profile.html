@@ -21,13 +21,24 @@
                     alt="Cover" class="cover-image">
                 <div class="profile-header">
                     <div class="profile-header-content">
-                        <div class="profile-name">
-                            <div class="name-row">
-                                <img class="user-avatar-large" src="{{ profile_user.avatar_url|default:'#' }}" alt="Avatar">
-                                <div class="name-info">
-                                    <h2>{{ profile_user.username }}</h2>
-                                    <p class="post-count">{{ post_count }} bài đăng</p>
-                                </div>
+                         <div class="name-row">
+                            <div style="position: relative;">
+                                <img class="user-avatar-large" src="{{ profile_user.avatar_url.url|default:'#' }}" alt="Avatar">
+
+                                {% if request.user == profile_user %}
+                                <form method="post" enctype="multipart/form-data" action="{% url 'update_avatar' %}" id="avatar-form">
+                                    {% csrf_token %}
+                                    <label for="avatar-input" class="edit-avatar-icon" title="Chỉnh sửa ảnh đại diện">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    <input type="file" name="avatar" id="avatar-input" accept="image/*" style="display:none" onchange="document.getElementById('avatar-form').submit();">
+                                </form>
+
+                                {% endif %}
+                            </div>
+                            <div class="name-info">
+                                <h2>{{ profile_user.username }}</h2>
+                                <p class="post-count">{{ post_count }} bài đăng</p>
                             </div>
                         </div>
 
@@ -43,7 +54,7 @@
                         {% for post in user_posts  %}
                         <div class="post" id="post-{{ post.id }}" >
                             <div class="user">
-                                <img src="{{ post.user.avatar_url|default:'#' }}" alt="Avatar">
+                                <img src="{{ post.user.avatar_url.url|default:'#' }}" alt="Avatar">
                                 <div class="post-author">
                                   <span class="author-name">{{ profile_user.username }}</span>
                                   <span class="post-date">{{ post.created_at|date:"d/m/Y \l\ú\c H:i" }}</span>
@@ -138,7 +149,7 @@
 
                 <div class="profile-content hidden" id="info-content">
                     <div class="user-info-card">
-                        <img class="user-avatar-large" src="{{ profile_user.avatar_url|default:'#' }}" alt="Avatar">
+                        <img class="user-avatar-large" src="{{ profile_user.avatar_url.url|default:'#' }}" alt="Avatar">
                         <h2 class="user-fullname">{{ profile_user.username }}</h2>
 
                         <div class="info-grid">
@@ -187,7 +198,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="edit-post-user">
-                            <img src="{% if profile_user.avatar_url %}{{ profile_user.avatar_url }}{% endif %}"
+                            <img src="{% if profile_user.avatar_url %}{{ profile_user.avatar_url.url }}{% endif %}"
                                 class="avatar-small">
                             <span>{{ profile_user.username }}</span>
                             <input type="hidden" name="remove_image" id="remove-image-input" value="false">
